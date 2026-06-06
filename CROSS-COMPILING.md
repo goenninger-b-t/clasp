@@ -237,3 +237,26 @@ implies `--strip` (override with `--no-strip`); default out dir is
   at the bundle root, making `SYS:LIB;MODULES;` resolve to `lib/modules/`. The
   clean alternative is a cross `ninja install` layout; the symlink is the
   lightweight workaround.
+
+**Snapshot-based deploy — now viable upstream (alternative to image+symlink).**
+At the `13f7ab789` base this bundle was built on, aarch64 `save-lisp-and-die
+:executable` snapshots were **broken**: `snapshot_save_impl` hardcoded objcopy
+`--output-target elf64-x86-64 --binary-architecture i386`, which aarch64 objcopy
+rejects, silently emitting an empty object (→ linker "file is empty"). Fixed as
+of `origin/main` `161bedf0c` by two commits:
+- `9e2867f78` — select the objcopy target/arch by build arch
+  (`elf64-littleaarch64` / `aarch64` on ARM64), and turn the previously-ignored
+  `system()` failures into `exit(1)` instead of a false success.
+- `8988144ad` — `snapshot_load` matches referenced C++ libraries by **basename**
+  (SONAME) instead of the save-time absolute-path suffix, so a snapshot whose
+  `libLLVM` / `libstdc++` / `libclasp` were relocated into a bundle `lib/` still
+  loads ("position-independent" snapshot load).
+
+Together these unlock a **snapshot bundle** (e.g. cando's `scando` /
+`scando-zeus-install`) as an alternative to the image+symlink bundle above. The
+two mechanisms are **orthogonal**: `8988144ad` fixes only `.so` (C++ library)
+resolution; `SYS:LIB;MODULES;` logical-pathname resolution still needs the
+`CLASP_HOME` + `build-aarch64/<variant>` symlink from the SYS: gotcha above, so
+a snapshot bundle keeps that part. Rebuilding the aarch64 tree at `161bedf0c` is
+**inert for the current image bundle** (these fixes live on the snapshot path
+only) but is a prerequisite for any snapshot-based deploy.
