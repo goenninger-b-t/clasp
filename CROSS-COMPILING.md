@@ -132,6 +132,15 @@ Slower, but no koga cross-hacking and an exact glibc match.
 
 All under `$ADI_SDK_ROOT` = `/mnt/nvme2n1/data02/adi-sdk/`.
 
+> **Note — toolchains scripts are vendored in the repo.** The `toolchains/*`
+> cross-build scripts (`aarch64-adi.cmake`, `build-llvm-aarch64.sh`,
+> `build-deps-aarch64.sh`, `llvm-config-aarch64`, `make-bundle-aarch64.sh`,
+> `make-release-bundle.sh`) now live in the checkout at `toolchains/` (the single
+> source of truth); the `$ADI_SDK_ROOT/toolchains/` entries are symlinks back to
+> them, so the SDK-relative paths below and in `config-aarch64.sexp`
+> (`:llvm-config`) still resolve. Those symlinks target the NFS checkout, so they
+> only resolve where `/mnt/nfs` is mounted (i.e. this build host).
+
 **Phase 1 — LLVM 22.1.7 aarch64 cross-build: DONE.**
 - `toolchains/aarch64-adi.cmake` — CMake cross-toolchain (ADI GCC 13.4,
   `--sysroot` = target sysroot, `-mcpu=cortex-a55+crypto`).
