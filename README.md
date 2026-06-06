@@ -34,6 +34,30 @@ paging space ("swapfile") configured.
 
 There is also docker image [here](https://github.com/clasp-developers/clasp/pkgs/container/clasp).
 
+### Cross-compilation SDK root
+
+Cross-compilation toolchains and SDKs (e.g. the Analog Devices Yocto SDK used
+to target the ADSP-SC598 / Cortex-A55 under Linux) are installed under a single
+root directory, configured via the `:adi-sdk-root` item in `config.sexp`:
+
+```lisp
+:adi-sdk-root "/mnt/nvme2n1/data02/adi-sdk/"
+```
+
+All SDKs and related packages are expected to live beneath this path. The ADI
+Yocto SDK, for example, installs as:
+
+```
+$ADI_SDK_ROOT/adi-distro-glibc/<version>/
+  environment-setup-cortexa55-adi_glibc-linux   # source to get $CC / $SDKTARGETSYSROOT
+  sysroots/cortexa55-adi_glibc-linux            # target (aarch64) sysroot
+  sysroots/x86_64-adi_glibc_sdk-linux           # host SDK tools (GCC 13.4)
+```
+
+This is currently a *recorded* setting: koga reads `config.sexp` and tolerates
+the key, but the mainline (host) build does not consume it. The aarch64
+cross-build tooling reads `:adi-sdk-root` from `config.sexp`.
+
 ### Common Lisp Ecosystem Support
 
 Clasp supports the following major components:
