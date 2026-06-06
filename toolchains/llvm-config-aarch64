@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# llvm-config wrapper for cross-compiling Clasp to aarch64 (ADI ADSP-SC598).
+#
+# koga's :llvm unit calls: --version --bindir --includedir --ldflags
+#   --system-libs --libs.  The trick:
+#   * --bindir  -> the HOST llvm-22 bin: clang/clang++/llvm-ar/nm/dis run on the
+#                  host and cross-target aarch64 via --target/--sysroot (set in
+#                  the cross config.sexp).
+#   * everything else -> the AARCH64 LLVM install, so the target binary links the
+#                  aarch64 libLLVM and compiles against aarch64 headers.
+#   * --version -> 22.1.7 so koga's +llvm-major-version+ check (15-20,22) passes.
+set -euo pipefail
+
+AARCH64=/mnt/nvme2n1/data02/adi-sdk/llvm-22-aarch64   # cross-built LLVM (target)
+HOSTBIN=/usr/lib/llvm-22/bin                          # host clang-22 toolchain
+
+emit() {
+  case "$1" in
+    --version)       echo "22.1.7" ;;
+    --bindir)        echo "$HOSTBIN" ;;
+    --prefix)        echo "$AARCH64" ;;
+    --includedir)    echo "$AARCH64/include" ;;
+    --libdir)        echo "$AARCH64/lib" ;;
+    --cflags)        echo "-I$AARCH64/include" ;;
+    --cxxflags)      echo "-I$AARCH64/include -std=c++17 -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS" ;;
+    --ldflags)       echo "-L$AARCH64/lib" ;;
+    --libs)          echo "-lLLVM" ;;
+    --system-libs)   echo "-lm -ldl -lrt -lpthread" ;;
+    --shared-mode)   echo "shared" ;;
+    --host-target)   echo "aarch64-adi_glibc-linux" ;;
+    --targets-built) echo "AArch64" ;;
+    --build-mode)    echo "MinSizeRel" ;;
+    *) ;;            # unknown query: emit nothing (koga doesn't use it)
+  esac
+}
+
+for a in "$@"; do emit "$a"; done
