@@ -195,6 +195,9 @@ SYMBOL_EXPORT_SC_(CorePkg, _PLUS_numberOfFixedArguments_PLUS_);
 SYMBOL_EXPORT_SC_(CorePkg, _PLUS_standardReadtable_PLUS_);
 SYMBOL_EXPORT_SC_(CorePkg, _PLUS_type_header_value_map_PLUS_);
 SYMBOL_EXPORT_SC_(CorePkg, _PLUS_variant_name_PLUS_);
+SYMBOL_EXPORT_SC_(CorePkg, _PLUS_builtin_main_stack_size_PLUS_);
+SYMBOL_EXPORT_SC_(CorePkg, _PLUS_builtin_thread_stack_size_PLUS_);
+SYMBOL_EXPORT_SC_(CorePkg, _PLUS_builtin_signal_stack_size_PLUS_);
 SYMBOL_EXPORT_SC_(CorePkg, _PLUS_fe_divbyzero_PLUS_);
 SYMBOL_EXPORT_SC_(CorePkg, _PLUS_fe_inexact_PLUS_);
 SYMBOL_EXPORT_SC_(CorePkg, _PLUS_fe_invalid_PLUS_);
@@ -528,6 +531,10 @@ void CoreExposer_O::define_essential_globals(LispPtr lisp) {
   _sym__PLUS_bitcode_name_PLUS_->defconstant(SimpleBaseString_O::make(BITCODE_NAME));
   _sym__PLUS_executable_name_PLUS_->defconstant(SimpleBaseString_O::make(EXECUTABLE_NAME));
   _sym__PLUS_application_name_PLUS_->defconstant(SimpleBaseString_O::make(APP_NAME));
+  // Stack sizes configured via koga (emitted into config.h), exposed to Lisp.
+  _sym__PLUS_builtin_main_stack_size_PLUS_->defconstant(clasp_make_fixnum(CLASP_DESIRED_STACK_CUR));
+  _sym__PLUS_builtin_thread_stack_size_PLUS_->defconstant(clasp_make_fixnum(DEFAULT_THREAD_STACK_SIZE));
+  _sym__PLUS_builtin_signal_stack_size_PLUS_->defconstant(clasp_make_fixnum(SIGNAL_STACK_SIZE));
   _sym__PLUS_fe_divbyzero_PLUS_->defconstant(clasp_make_fixnum(FE_DIVBYZERO));
   _sym__PLUS_fe_inexact_PLUS_->defconstant(clasp_make_fixnum(FE_INEXACT));
   _sym__PLUS_fe_invalid_PLUS_->defconstant(clasp_make_fixnum(FE_INVALID));
