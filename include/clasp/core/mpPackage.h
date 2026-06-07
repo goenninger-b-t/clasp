@@ -58,7 +58,11 @@ template <typename T> struct RAIILock {
 };
 #endif
 
+/// Default mp: worker-thread C stack size. Overridable via the koga config.sexp
+/// key :thread-stack-size (emitted into config.h).
+#ifndef DEFAULT_THREAD_STACK_SIZE
 #define DEFAULT_THREAD_STACK_SIZE 8388608
+#endif
 namespace mp {
 
 typedef enum {
@@ -123,7 +127,7 @@ public:
 #endif
 public:
   Process_O(core::T_sp name, core::T_sp function, core::List_sp arguments, core::List_sp initialSpecialBindings = nil<core::T_O>(),
-            size_t stack_size = 8 * 1024 * 1024)
+            size_t stack_size = DEFAULT_THREAD_STACK_SIZE)
       : _Parent(nil<core::T_O>()), _Name(name), _Function(function), _Arguments(arguments),
         _InitialSpecialBindings(initialSpecialBindings), _ReturnValuesList(nil<core::T_O>()), _Aborted(false),
         _AbortCondition(nil<core::T_O>()), _ThreadInfo(NULL), _Phase(Nascent),

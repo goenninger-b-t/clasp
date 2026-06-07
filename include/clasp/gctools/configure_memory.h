@@ -66,6 +66,14 @@
 
 /// The size of the sigaltstack that Clasp requires to do at least some Common Lisp calls
 /// 1 MB is large - if we have a lot of threads we will want to knock this down
+/// Overridable via the koga config.sexp key :signal-stack-size (emitted into config.h).
+#ifndef SIGNAL_STACK_SIZE
 #define SIGNAL_STACK_SIZE (1024 * 1024)
+#endif
 
-#define CLASP_DESIRED_STACK_CUR 16 * 1024 * 1024
+/// Desired main-thread stack size; main() raises RLIMIT_STACK to this when the
+/// inherited soft limit is lower. Overridable via the koga config.sexp key
+/// :main-stack-size (emitted into config.h).
+#ifndef CLASP_DESIRED_STACK_CUR
+#define CLASP_DESIRED_STACK_CUR (16 * 1024 * 1024)
+#endif

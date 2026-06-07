@@ -131,6 +131,18 @@
                    :initform t
                    :type boolean
                    :documentation "Build clasp in parallel")
+   (main-stack-size :accessor main-stack-size
+                    :initarg :main-stack-size
+                    :initform (* 16 1024 1024)
+                    :documentation "Main-thread C stack size in bytes. main() raises RLIMIT_STACK to this at startup when the inherited soft limit is lower. Emitted as CLASP_DESIRED_STACK_CUR. A positive integer (bytes).")
+   (thread-stack-size :accessor thread-stack-size
+                      :initarg :thread-stack-size
+                      :initform (* 8 1024 1024)
+                      :documentation "Default C stack size in bytes for mp: worker threads. Emitted as DEFAULT_THREAD_STACK_SIZE. A positive integer (bytes).")
+   (signal-stack-size :accessor signal-stack-size
+                      :initarg :signal-stack-size
+                      :initform (* 1 1024 1024)
+                      :documentation "Per-thread signal handler (sigaltstack) size in bytes. Emitted as SIGNAL_STACK_SIZE. A positive integer (bytes).")
    (bin-path :accessor bin-path
              :initform #P"/usr/local/bin/"
              :initarg :bin-path

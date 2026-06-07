@@ -1,5 +1,15 @@
 (in-package #:koga)
 
+(defun config-integer (value)
+  "Coerce a koga configuration value to a positive integer suitable for emitting
+as a C macro. Accepts an integer (from config.sexp) or a digit string (from a
+--key=value command-line option)."
+  (let ((n (etypecase value
+             (integer value)
+             (string (parse-integer (string-trim '(#\Space #\Tab) value))))))
+    (assert (plusp n) () "expected a positive integer (bytes), got ~s" value)
+    n))
+
 (defparameter +os-features+ '(:bsd :darwin :freebsd :linux :unix))
 
 (defun create-keyword-list (x)
@@ -35,6 +45,9 @@
                  "RUNNING_PRECISEPREP" *variant-prep*
                  "PROGRAM_CLASP" t
                  "CLASP_THREADS" t
+                 "CLASP_DESIRED_STACK_CUR" (config-integer (main-stack-size configuration))
+                 "DEFAULT_THREAD_STACK_SIZE" (config-integer (thread-stack-size configuration))
+                 "SIGNAL_STACK_SIZE" (config-integer (signal-stack-size configuration))
                  "CLBIND_DYNAMIC_LINK" t
                  "DEFINE_CL_SYMBOLS" t
                  "USE_SOURCE_DATABASE" t

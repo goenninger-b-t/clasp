@@ -269,3 +269,26 @@ resolution; `SYS:LIB;MODULES;` logical-pathname resolution still needs the
 a snapshot bundle keeps that part. Rebuilding the aarch64 tree at `161bedf0c` is
 **inert for the current image bundle** (these fixes live on the snapshot path
 only) but is a prerequisite for any snapshot-based deploy.
+
+## 10. Tuning stack sizes (koga config)
+
+Clasp's three C stack sizes are koga-configurable. Handy on the 512 MB SC598 to
+trim per-thread memory, or to raise a stack if you hit overflow. Add to any
+`config.sexp` (e.g. `config-aarch64.sexp`); **literal integers, in bytes**; omit
+a key to keep its default:
+
+| key | C macro | default | what |
+|---|---|---|---|
+| `:main-stack-size`   | `CLASP_DESIRED_STACK_CUR`   | 16 MiB | main thread; `main()` raises `RLIMIT_STACK` to this if the inherited `ulimit -s` is lower (raise-only) |
+| `:thread-stack-size` | `DEFAULT_THREAD_STACK_SIZE` |  8 MiB | default `mp:` worker-thread C stack (`pthread_attr_setstacksize`) |
+| `:signal-stack-size` | `SIGNAL_STACK_SIZE`         |  1 MiB | per-thread signal stack (`sigaltstack`), on which the `SA_ONSTACK` SIGSEGV handler runs |
+
+Mechanism: the koga `configuration` slots (`src/koga/configure.lisp`) are emitted
+into `config.h` (`src/koga/config-header.lisp`); the C++ headers
+(`configure_memory.h`, `mpPackage.h`) keep their values as `#ifndef` fallbacks so
+the `config.h` value wins (clasp already includes `config.h` with
+`-Wmacro-redefined` suppressed). Re-run `./koga` and rebuild for changes to take
+effect. The `--key=value` CLI form works too: `./koga --thread-stack-size=4194304`.
+
+`:main-stack-size` is **raise-only** — it cannot shrink the main stack below the
+shell's `ulimit -s`.
