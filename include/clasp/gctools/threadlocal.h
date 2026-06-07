@@ -273,6 +273,12 @@ public:
   void finish_initialization_main_thread(core::T_sp theNilObject);
   ThreadLocalState();
   void initialize_thread(mp::Process_sp process);
+  // Per-thread alternate signal stack (sized by SIGNAL_STACK_SIZE, i.e. koga
+  // :signal-stack-size) so the SA_ONSTACK signal handlers (notably the SIGSEGV
+  // stack-overflow handler) have stack to run on. Paired: create at thread
+  // start, destroy at thread exit; both tolerate being called when not needed.
+  void create_sigaltstack();
+  void destroy_sigaltstack();
 
   pid_t safe_fork();
 

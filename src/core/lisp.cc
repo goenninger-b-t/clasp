@@ -214,7 +214,7 @@ void Lisp::shutdownLispEnvironment() {
     globals_->_DebugStream->endNode(DEBUG_TOPLEVEL);
     delete globals_->_DebugStream;
   }
-  //  my_thread->destroy_sigaltstack();
+  my_thread->destroy_sigaltstack();
 }
 
 void Lisp::lisp_initSymbols(LispPtr lisp) {}
@@ -394,6 +394,9 @@ void Lisp::initializeMainThread() {
 }
 
 void Lisp::startupLispEnvironment() {
+  // Install the main thread's alternate signal stack (SIGNAL_STACK_SIZE) so the
+  // SA_ONSTACK SIGSEGV handler has stack to run on (e.g. on stack overflow).
+  my_thread->create_sigaltstack();
 
 #ifdef DEBUG_FLAGS_SET
   printf("%s:%d There are DEBUG_xxxx flags on - check the top of configure_clasp.h !!!!\n", __FILE__, __LINE__);

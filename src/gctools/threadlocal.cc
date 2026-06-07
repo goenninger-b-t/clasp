@@ -198,6 +198,7 @@ ThreadLocalState::ThreadLocalState(bool dummy)
   this->_xorshf_y = rand();
   this->_xorshf_z = rand();
   sigemptyset(&this->_PendingSignals);
+  this->_sigaltstack_buffer = nullptr;
 }
 
 pid_t ThreadLocalState::safe_fork() {
@@ -246,6 +247,52 @@ ERR:
   abort();
 };
 
+// Install a per-thread alternate signal stack of SIGNAL_STACK_SIZE bytes (koga
+// :signal-stack-size) so SA_ONSTACK handlers (e.g. the SIGSEGV stack-overflow
+// handler) have stack to run on. Non-fatal on failure: handlers then run on the
+// normal stack, as before this was wired in.
+void ThreadLocalState::create_sigaltstack() {
+  if (this->_sigaltstack_buffer)
+    return; // already installed for this thread
+  size_t size = SIGNAL_STACK_SIZE;
+#ifdef MINSIGSTKSZ
+  if (size < (size_t)MINSIGSTKSZ)
+    size = (size_t)MINSIGSTKSZ;
+#endif
+  void* buffer = malloc(size);
+  if (!buffer)
+    return;
+  stack_t ss;
+  ss.ss_sp = buffer;
+  ss.ss_size = size;
+  ss.ss_flags = 0;
+  if (sigaltstack(&ss, &this->_original_stack) != 0) {
+    free(buffer);
+    return;
+  }
+  this->_sigaltstack_buffer = buffer;
+}
+
+// Uninstall and free this thread's alternate signal stack (paired with
+// create_sigaltstack). Idempotent.
+void ThreadLocalState::destroy_sigaltstack() {
+  if (!this->_sigaltstack_buffer)
+    return;
+  // Restore the previously-installed alt stack if there was a valid one,
+  // otherwise disable alt-stack handling for this thread, before freeing.
+  if (this->_original_stack.ss_sp != nullptr && !(this->_original_stack.ss_flags & SS_DISABLE)) {
+    sigaltstack(&this->_original_stack, nullptr);
+  } else {
+    stack_t ss;
+    ss.ss_sp = nullptr;
+    ss.ss_size = 0;
+    ss.ss_flags = SS_DISABLE;
+    sigaltstack(&ss, nullptr);
+  }
+  free(this->_sigaltstack_buffer);
+  this->_sigaltstack_buffer = nullptr;
+}
+
 // This is for constructing ThreadLocalState for threads
 ThreadLocalState::ThreadLocalState()
   : _unwinds(0), _CleanupFunctions(NULL), _Breakstep(false), _PendingSignalsP(false),
@@ -262,6 +309,7 @@ ThreadLocalState::ThreadLocalState()
   this->_xorshf_y = rand();
   this->_xorshf_z = rand();
   sigemptyset(&this->_PendingSignals);
+  this->_sigaltstack_buffer = nullptr;
 }
 
 static void dumpDynEnvStack(T_sp stack) {

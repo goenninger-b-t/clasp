@@ -194,7 +194,7 @@ void Process_O::run(void* cold_end_of_stack) {
   my_thread = &thread_local_state;
   my_thread->startUpVM();
   my_thread->initialize_thread(this->asSmartPtr());
-  //  my_thread->create_sigaltstack();
+  my_thread->create_sigaltstack();
   _ThreadInfo = my_thread;
 
   // We're ready to run Lisp
@@ -211,6 +211,7 @@ void Process_O::run(void* cold_end_of_stack) {
     fclose(it.second);
   }
 #endif
+  my_thread->destroy_sigaltstack();
 };
 
 // This is the function actually passed to pthread_create.
